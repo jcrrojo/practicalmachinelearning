@@ -72,7 +72,7 @@ set.seed(4455)
 modelRforest <- train(classe ~ ., data = dataTrain, method = "rf")
 modelRforest
 predRforest <- predict(modelRforest, newdata = dataTest)
-confusionMatrix(predRforest, test$classe)
+confusionMatrix(predRforest, dataTest$classe)
 ```
 
 The accuracy is high now.
