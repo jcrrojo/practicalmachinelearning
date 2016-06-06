@@ -1,0 +1,86 @@
+---
+title: "Prediction Assignment Writeup"
+author: "Juan Carlos Rodriguez Rojo"
+date: "6 de junio de 2016"
+output: html_document
+---
+
+#The goal
+
+The goal of this project is to predict the manner in which they did the exercise. This is the "classe" variable in the training set. I may use any of the other variables to predict with. I should create a report describing how I built my model, how I used cross validation, what I think the expected out of sample error is, and why I made the choices I did. I will also use my prediction model to predict 20 different test cases.
+
+#Data loading
+
+Data loading, data reading.
+```{r}
+setwd("~/WorkDoc/2016/Z_Cursos/JHOPKPracticalMachineLearning/week4/project/practicalmachinelearning/")
+urlTrain <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+urlTest <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+download.file(urlTrain, destfile = "Train.csv", method = "curl")
+download.file(urlTest, destfile = "Test.csv", method = "curl")
+Train<-read.csv("Train.csv", header=T)
+Test<-read.csv("Test.csv", header=T)
+```
+
+#Data cleaning
+
+Thera are columns of the raw data set that contaning nothing. The first 7 columns not related to predict. We delete those columns.
+
+```{r}
+library(caret)
+Train <- Train[ , colSums(is.na(Train)) == 0]
+Train <- Train[, -c(1,2,3,4,5,6,7)]
+Train <- Train[, -nearZeroVar(Train)]
+table(Train$classe)
+```
+
+#Split data
+
+Splitting data set to training and testing for model
+
+```{r}
+set.seed(2233)
+datasplit <- createDataPartition(y=Train$classe, p = 0.7, list = FALSE)
+dataTrain <- Train[datasplit,]
+dataTest <- Train[-datasplit,]
+```
+
+#Model
+## Tree
+
+First model: classification tree with caret package
+
+```{r}
+library(rpart)
+set.seed(3344)
+modelTree <- train(classe ~ ., method = "rpart", data = dataTrain)
+print(modelTree$finalModel)
+predTree <- predict(modelTree, dataTest)
+predTab <- with(dataTest, table(predTree, classe))
+sum(diag(predTab))/sum(as.vector(predTab))
+```
+
+The accuracy is very low
+
+## Random Forest
+
+Second model: classification tree with random forest
+
+```{r}
+library(randomForest)
+set.seed(4455)
+modelRforest <- train(classe ~ ., data = dataTrain, method = "rf")
+modelRforest
+predRforest <- predict(modelRforest, newdata = dataTest)
+confusionMatrix(predRforest, test$classe)
+```
+
+The accuracy is high now.
+
+## Predict 20 test cases
+
+```{r}
+predRforest20<-predict(modelRforest, newdata=Test)
+predRforest20
+```
+
